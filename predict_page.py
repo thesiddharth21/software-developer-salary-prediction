@@ -1,0 +1,110 @@
+import streamlit as st
+import pickle
+import numpy as np
+
+
+def load_model():
+    with open("saved_steps.pkl", "rb") as f:
+        data = pickle.load(f)
+    return data
+
+
+data = load_model()
+
+regressor = data["model"]
+lbl_enc_country = data["lbl_enc_country"]
+lbl_enc_education = data["lbl_enc_education"]
+lbl_enc_language = data["lbl_enc_language"]
+
+
+def show_predict_page():
+    st.title("Software Developer Salary Prediction")
+
+    st.write("""### We require some details to predict the salary""")
+
+    COUNTRIES = (
+        "United States",
+        "India",
+        "United Kingdom",
+        "Germany",
+        "Canada",
+        "Brazil",
+        "France",
+        "Spain",
+        "Australia",
+        "Netherlands",
+        "Poland",
+        "Italy",
+        "Russian Federation",
+        "Sweden",
+        "Other",
+    )
+
+    EDUCATION = (
+        "Less than a Bachelors",
+        "Bachelor’s degree",
+        "Master’s degree",
+        "Post grad",
+    )
+
+    LANGUAGES = (
+        "JavaScript",
+        "HTML/CSS",
+        "Go",
+        "Python",
+        "C#",
+        "Bash/Shell/PowerShell",
+        "C++",
+        "C",
+        "Dart",
+        "Java",
+        "Rust",
+        "Assembly",
+        "R",
+        "Haskell",
+        "Julia",
+        "TypeScript",
+        "Kotlin",
+        "Swift",
+        "PHP",
+        "Scala",
+        "SQL",
+        "Objective-C",
+        "VBA",
+        "Ruby",
+        "Perl",
+    )
+
+    country = st.selectbox("Country", COUNTRIES)
+    education = st.selectbox("Education Level", EDUCATION)
+    language = st.selectbox("Language Known", LANGUAGES)
+
+    experience = st.slider("Years of Experience", 0, 50, 3)
+
+    m = st.markdown(
+        """
+        <style>
+        div.stButton > button:first-child {
+            background-color: #7900FF;
+            color:white;
+            font-family: "Lucida Grande", sans-serif;
+            font-size:20px;
+            height:3em;
+            width:10em;
+            border-radius:10px 10px 10px 10px;
+        }
+        </style>""",
+        unsafe_allow_html=True,
+    )
+
+    ok = st.button("Calculate Salary")
+
+    if ok:
+        X = np.array([[country, education, experience, language]])
+        X[:, 0] = lbl_enc_country.transform(X[:, 0])
+        X[:, 1] = lbl_enc_education.transform(X[:, 1])
+        X[:, 3] = lbl_enc_language.transform(X[:, 3])
+        X = X.astype(float)
+
+        salary = regressor.predict(X)
+        st.subheader(f"The estimated salary is ${salary[0]:.2f}")
