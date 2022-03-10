@@ -1,6 +1,7 @@
 import streamlit as st
 import pickle
 import numpy as np
+from forex_python.converter import CurrencyRates, CurrencyCodes
 
 
 def load_model():
@@ -41,7 +42,6 @@ def show_predict_page():
     )
 
     EDUCATION = (
-        "Less than a Bachelors",
         "Bachelor’s degree",
         "Master’s degree",
         "Post grad",
@@ -107,4 +107,49 @@ def show_predict_page():
         X = X.astype(float)
 
         salary = regressor.predict(X)
-        st.subheader(f"The estimated salary is ${salary[0]:.2f}")
+
+        # Currency
+        currency = {
+            "USD",
+            "INR",
+            "GBP",
+            "EUR",
+            "CAD",
+            "BRL",
+            "AUD",
+            "PLN",
+            "RUB",
+            "SEK",
+        }
+
+        def currency_switch(cnt_with_curr):
+            switch = {
+                "United States": "USD",
+                "India": "INR",
+                "United Kingdom": "GBP",
+                "Germany": "EUR",
+                "Canada": "CAD",
+                "Brazil": "BRL",
+                "France": "EUR",
+                "Spain": "EUR",
+                "Australia": "AUD",
+                "Netherlands": "EUR",
+                "Poland": "PLN",
+                "Italy": "EUR",
+                "Russian Federation": "RUB",
+                "Sweden": "SEK",
+            }
+
+            return switch.get(cnt_with_curr, "USD")
+
+        country_with_currency = currency_switch(country)
+
+        currency_value = CurrencyRates()
+        converted_salary = currency_value.convert(
+            "USD", country_with_currency, salary[0]
+        )
+
+        currency_symbol = CurrencyCodes()
+        curr_symbol = currency_symbol.get_symbol(country_with_currency)
+
+        st.subheader(f"The estimated salary is {curr_symbol}{converted_salary:.2f}")
